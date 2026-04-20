@@ -1,0 +1,82 @@
+{
+  "name": "file-upload",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-file",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "56bdc2e1-738f-466c-a7d4-d11a3c5e1fde",
+      "name": "Webhook",
+      "webhookId": "38755913-dd64-4890-88a3-bdb6d7091f00"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "file",
+        "name": "={{$binary.data.fileName}}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1svYWfiuun26-KpVBd8Rb7Q-thEHjQHHq",
+          "mode": "list",
+          "cachedResultName": "chatbot-data",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1svYWfiuun26-KpVBd8Rb7Q-thEHjQHHq"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        240,
+        0
+      ],
+      "id": "86fae580-6698-41b6-aa1c-f13426fe2374",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "FHoLYXCcVeC4VvaP",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e6b5baea-8a21-4682-b206-57b7766df1ec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "40cede097e1ee1c5bd7404473f04ace12cf071b5edb9d616b901eaaa71f46069"
+  },
+  "id": "wrVMknby3jJEmPwN",
+  "tags": []
+}

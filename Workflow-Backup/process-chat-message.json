@@ -1,0 +1,327 @@
+{
+  "name": "process-chat-message",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "process-message",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -256,
+        0
+      ],
+      "id": "fdc82709-944d-4adc-8790-48a1ce282f1e",
+      "name": "Webhook",
+      "webhookId": "85c999fb-8720-454f-a318-3f9c7a32444d"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  sessionId:$input.first().json.body.sessionId ,\n  userMessage:$input.first().json.body.userMessage ,\n  receivedAt: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "8dd6caa3-8b37-4bfe-ad79-10fb36d7b5f3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"data\": {\n    \"sessionId\": \"{{ $node['Code in JavaScript'].json.sessionId }}\",\n    \"userMessage\": \"{{ $node['Code in JavaScript'].json.userMessage }}\",\n    \"aiResponse\": \"{{ $json.output }}\",\n    \"topic\":\"{{ $json.topic }}\",\n    \"timestamp\": \"{{ new Date().toISOString() }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        720,
+        0
+      ],
+      "id": "cd1b2789-41f2-45b9-8928-b80e521290ea",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a hotel chatbot.\n\nHere is the previous conversation history:\n{{ $memory.chatHistory }}\n\nRead the latest user message:\n{{ $json.userMessage }}\n\nClassify the latest user message into ONE of these topics:\n- Rooms\n- Restaurant\n- Pool\n- Parking\n- Spa\n- Check-in/Check-out\n- Pricing\n- Location\n- Facilities\n- Other\n\nRules:\n- Use the previous conversation history to answer the user's question.\n- Choose only one topic from the list above.\n- Do not explain your reasoning.\n- Do not add extra text.\n- The \"output\" must be a short, helpful chatbot reply to the user message (not the same message).\n- Reply ONLY in this JSON format:\n\n{\n  \"output\": \"short helpful chatbot reply here\",\n  \"topic\": \"Rooms\"\n}\n\nWhere:\n- \"output\" is a natural assistant response to the user.\n- \"topic\" is the correct category only.",
+        "options": {
+          "systemMessage": "=Here’s the best system message for your hotel chatbot AI Agent node in n8n, tailored for your use case:\nuse the hotel-chatbot-data tool for getting data\nSystem Message:\n\nYou are a helpful hotel assistant.\nUse the hotel’s knowledge base to answer questions accurately and concisely.\nAlways provide friendly, relevant, and clear responses to guest inquiries."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        192,
+        0
+      ],
+      "id": "52af6bf8-ee60-489e-9ae9-e5774693c172",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        208
+      ],
+      "id": "dd26b733-7274-4611-8b6a-aca57f194b43",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "BYP59hKrGvujR73F",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output;\n\n// Parse the stringified JSON\nconst parsed = JSON.parse(raw);\n\nreturn [{\n  json: {\n    output: parsed.output,\n    topic: parsed.topic\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        0
+      ],
+      "id": "0e24d5ce-c87f-4116-99ac-380c6d10779e",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": "=5"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        208
+      ],
+      "id": "105c956c-3d67-4ebb-b8a2-2cb19b9159ad",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "chat-bot-hotel",
+          "mode": "list",
+          "cachedResultName": "chat-bot-hotel"
+        },
+        "options": {
+          "pineconeNamespace": "hotel-chat-bot"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        480
+      ],
+      "id": "8f6a1284-62d8-45bf-b087-ffdafebf5d05",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "JxaVR0uDqoBKDdC6",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        640
+      ],
+      "id": "d8a6e282-8723-4f42-a899-3d1ca88d4c7a",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "BYP59hKrGvujR73F",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        480
+      ],
+      "id": "cd0714a3-8f30-4b2b-8374-45eec21f2ada",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "BYP59hKrGvujR73F",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "return documents related to document"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        256
+      ],
+      "id": "aab02ea2-fe24-45ae-a912-6eccb0fbb5f9",
+      "name": "hotel-chatbot-data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "hotel-chatbot-data",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "hotel-chatbot-data",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hotel-chatbot-data": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "13bef7a3-98c5-4067-bc3b-05145d4a8019",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "40cede097e1ee1c5bd7404473f04ace12cf071b5edb9d616b901eaaa71f46069"
+  },
+  "id": "W4LUITHN2VOboBiq",
+  "tags": []
+}

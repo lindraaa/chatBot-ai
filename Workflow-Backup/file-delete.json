@@ -1,0 +1,72 @@
+{
+  "name": "file-delete",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "file-delete",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "d96bc91f-98ee-4c12-a9dd-307c58fc9e87",
+      "name": "Webhook",
+      "webhookId": "75cac3e8-23b1-4bb9-a997-5a1f3bdbfbce"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "deleteFolder",
+        "folderNoRootId": {
+          "__rl": true,
+          "value": "={{ $json.body.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d24707e7-4f2b-4d83-b8ab-642b663932fb",
+      "name": "Delete folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "FHoLYXCcVeC4VvaP",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Delete folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d1534dce-acb1-47c4-80e7-e325c22df9f3",
+  "meta": {
+    "instanceId": "40cede097e1ee1c5bd7404473f04ace12cf071b5edb9d616b901eaaa71f46069"
+  },
+  "id": "AuMivzBoJ7D7CI6Z",
+  "tags": []
+}
