@@ -13,6 +13,8 @@ export const up = (pgm) => {
     id: { type: 'TEXT', primaryKey: true },
     started_at: { type: 'TIMESTAMP', notNull: true, default: pgm.func('CURRENT_TIMESTAMP') },
     message_count: { type: 'INTEGER', notNull: true, default: 0 },
+    created_at: { type: 'TIMESTAMP', notNull: true, default: pgm.func('CURRENT_TIMESTAMP') },
+    updated_at: { type: 'TIMESTAMP', notNull: true, default: pgm.func('CURRENT_TIMESTAMP') },
   });
 };
 
