@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import adminRoutes from './admin';
+import chatRoutes from './chat';
 
 const router: Router = Router();
 
@@ -10,15 +12,8 @@ router.get('/health', (_req: Request, res: Response): void => {
   });
 });
 
-// Example endpoint
-router.get('/example', (_req: Request, res: Response): void => {
-  res.json({
-    message: 'This is an example endpoint',
-    data: {
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-    },
-  });
-});
+// Mount route modules
+router.use('/admin', adminRoutes);
+router.use('/chat', chatRoutes);
 
 export default router;
