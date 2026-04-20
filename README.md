@@ -1,6 +1,14 @@
-# chatBot-ai - Full Stack Application
+# Cincinnati Hotel AI Chatbot - Full Stack Application
 
-Complete full-stack web application with React + Vite frontend and Node.js + Express backend, built with TypeScript and modern best practices.
+A production-ready hotel information chatbot system for Cincinnati Hotel. This full-stack web application features a React + Vite frontend with Material UI and a Node.js + Express backend, built with TypeScript and modern best practices.
+
+## 🏨 System Overview
+
+This platform simulates a real-life hotel information chatbot where guests can chat with an AI assistant that answers questions about the hotel's facilities, rooms, prices, and services based on an uploaded PDF document.
+
+### Two User Roles:
+- **Admin** – Upload/update hotel information PDF and view usage statistics
+- **User** – Chat with the hotel's AI assistant and ask questions about the hotel
 
 ## 📁 Project Structure
 
@@ -69,15 +77,38 @@ Frontend runs on `http://localhost:5173`
 - Centralized error handling
 - Request logging middleware
 - Type-safe TypeScript with strict mode
-- Health check and example endpoints
+- PDF document processing and storage
+- Chat history management
+- Email notifications for unresolved queries
 
 ### Frontend
 - React 18 with hooks
 - Vite for fast development and builds
+- Material UI (MUI) components library
 - Axios HTTP client with interceptors
 - API proxy configuration for development
-- Automatic backend health check
-- Responsive design with CSS
+- Two distinct interfaces: Admin Dashboard & User Chat
+- Real-time statistics dashboard
+- Responsive Material Design
+
+## 📋 Functional Requirements
+
+### User Side (Chat Interface)
+- **Landing Page**: Two buttons to select between Admin and Regular User modes
+- **Chat Interface**: Real-time conversation with Cincinnati Hotel chatbot
+- **Knowledge Base**: Chatbot answers based exclusively on uploaded PDF content
+- **Fallback Handling**: 
+  - Polite response when information isn't available
+  - Contact form to collect: Name, Phone, Email
+  - Email notification sent to idan@tauga.ai with conversation context and unanswered question
+
+### Admin Side (Dashboard)
+- **PDF Upload**: Upload and replace single PDF document (knowledge base)
+- **Statistics Dashboard**:
+  - Total number of chat sessions
+  - Questions asked per topic/category
+  - Chat activity analytics
+- **No Authentication**: Simple access via "Admin" button on landing page
 
 ## 🛠 Development
 
