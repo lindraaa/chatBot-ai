@@ -3,6 +3,7 @@ import cors from 'cors';
 import errorHandler from './middleware/errorHandler';
 import logger from './middleware/logger';
 import apiRoutes from './routes/api';
+import { query } from './db';
 
 const app: Express = express();
 
@@ -21,9 +22,14 @@ app.use(logger);
 // Routes
 app.use('/api', apiRoutes);
 
-// Health check endpoint (basic)
-app.get('/health', (_req: Request, res: Response): void => {
-  res.json({ status: 'healthy' });
+// Health check endpoint with database status
+app.get('/health', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    await query('SELECT NOW()');
+    res.json({ status: 'healthy', database: 'connected' });
+  } catch (error) {
+    res.status(503).json({ status: 'unhealthy', database: 'disconnected', error: String(error) });
+  }
 });
 
 // 404 handler
