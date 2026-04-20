@@ -1,9 +1,11 @@
 // Service layer for Chat operations
 import { N8nService } from './n8nService';
 import { SessionRepository } from '../repositories/sessionRepository';
+import { MessageRepository } from '../repositories/messageRespository';
 
 const n8nService = new N8nService();
 const sessionRepository = new SessionRepository();
+const messageRepository = new MessageRepository();
 
 export interface Session {
   id: string;
@@ -15,7 +17,7 @@ export interface ChatMessage {
   sessionId: string;
   userMessage: string;
   aiResponse: string;
-  timestamp: Date;
+  topic: string;
 }
 
 export interface ContactFormData {
@@ -49,16 +51,35 @@ export class ChatService {
   // Send message and get AI response via n8n, increment counter in DB
   async sendMessage(sessionId: string, userMessage: string): Promise<ChatMessage> {
     const n8nResponse = await n8nService.processChatMessage(sessionId, userMessage);
-
-    if (n8nResponse.success && n8nResponse.data?.data?.response) {
+    console.log('n8nResponse in sendMessage:', n8nResponse);
+    if (n8nResponse.success && n8nResponse.data?.data?.aiResponse) {
       // Increment message count in database
+        const topic = n8nResponse.data.data.topic;
+      const aiResponse = n8nResponse.data.data.aiResponse;
+      const timestamp = new Date();
+
+      // Store user message
+      await messageRepository.storeMessage({
+        session_id: sessionId,
+        role: 'user',
+        content: userMessage,
+        topic,
+      });
+
+      // Store AI response
+      await messageRepository.storeMessage({
+        session_id: sessionId,
+        role: 'ai',
+        content: aiResponse,
+        topic
+      });
       await sessionRepository.incrementMessageCount(sessionId);
 
       return {
         sessionId,
         userMessage,
-        aiResponse: n8nResponse.data.data.response,
-        timestamp: new Date(),
+        aiResponse: n8nResponse.data.data.aiResponse,
+        topic: n8nResponse.data.data.topic,
       };
     }
 

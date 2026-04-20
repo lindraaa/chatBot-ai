@@ -80,4 +80,15 @@ export class N8nService {
       timestamp: new Date().toISOString(),
     });
   }
+
+  /**
+   * Process chat message via n8n
+   */
+  async processChatMessage(sessionId: string, userMessage: string): Promise<N8nWorkflowResponse> {
+    return this.triggerWorkflow('process-message', {
+      sessionId,
+      userMessage,
+      timestamp: new Date().toISOString(),
+    });
+  }
 }

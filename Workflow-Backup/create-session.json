@@ -1,0 +1,86 @@
+{
+  "name": "create-session",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-session",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "7e651e27-f65f-4a23-ad81-2009d4233e3a",
+      "name": "Webhook",
+      "webhookId": "711d71f4-a79b-4be5-a5f5-69ea864bea95"
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0,\n        v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nreturn [{\n  sessionId: generateUUID(),\n  startedAt: new Date().toISOString(),\n  messageCount: 0\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8b273633-ece0-4504-b10e-6f03d61f335d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"data\": {\n    \"sessionId\": \"{{ $json.sessionId }}\",\n    \"startedAt\": \"{{ $json.startedAt }}\",\n    \"messageCount\": {{ $json.messageCount }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        256,
+        0
+      ],
+      "id": "ca40801d-2957-45c7-98e1-33d3b84703eb",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f899d8a5-352d-4e6b-8da0-eb9d00a30fda",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "40cede097e1ee1c5bd7404473f04ace12cf071b5edb9d616b901eaaa71f46069"
+  },
+  "id": "GK5otOh7jaU2YtrO",
+  "tags": []
+}

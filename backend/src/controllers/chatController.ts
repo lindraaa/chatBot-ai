@@ -16,14 +16,14 @@ export const createSession = async (req: Request, res: Response): Promise<void> 
 // Send message endpoint
 export const sendMessage = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { sessionId, message } = req.body;
+    const { sessionId, userMessage } = req.body;
 
-    if (!sessionId || !message) {
-      res.status(400).json({ status: 'error', message: 'Missing sessionId or message' });
+    if (!sessionId || !userMessage) {
+      res.status(400).json({ status: 'error', message: 'Missing sessionId or userMessage' });
       return;
     }
 
-    const chatMessage = await chatService.sendMessage(sessionId, message);
+    const chatMessage = await chatService.sendMessage(sessionId, userMessage);
     res.status(200).json({ status: 'success', data: chatMessage });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'Failed to send message', error: String(error) });
