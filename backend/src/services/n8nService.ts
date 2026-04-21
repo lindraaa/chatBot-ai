@@ -1,5 +1,6 @@
 // n8n Service for workflow automation
 
+
 export interface N8nWebhookPayload {
   [key: string]: any;
 }
@@ -104,6 +105,71 @@ export class N8nService {
   }): Promise<N8nWorkflowResponse> {
     return this.triggerWorkflow('handle-contact-form', {
       ...formData,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Upload file via n8n
+   * @param file - File buffer to upload
+   * @param fileName - Original file name
+   */
+  async uploadFile(file: Buffer, fileName: string): Promise<N8nWorkflowResponse> {
+    try {
+      const url = `${this.baseUrl}/webhook/upload-file`;
+      const base64File = file.toString('base64');
+
+      console.log('🔗 Uploading file to n8n:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(this.webhookKey && { 'X-Webhook-Key': this.webhookKey }),
+        },
+        body: JSON.stringify({
+          fileName,
+          file: base64File,
+          mimeType: 'application/pdf',
+        }),
+      });
+
+      console.log('📨 n8n Upload Response Status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('❌ n8n Upload Error:', errorText);
+        return {
+          success: false,
+          message: `n8n file upload failed with status ${response.status}`,
+          error: errorText,
+        };
+      }
+
+      const data = await response.json();
+      console.log('✅ n8n Upload Response Data:', data);
+      return {
+        success: true,
+        message: 'File uploaded successfully',
+        data,
+      };
+    } catch (error) {
+      console.log('❌ n8n Upload Error:', error);
+      return {
+        success: false,
+        message: 'Failed to upload file to n8n',
+        error: String(error),
+      };
+    }
+  }
+
+  /**
+   * Delete file via n8n
+   * @param id - File ID to delete
+   */
+  async deleteFile(id: string): Promise<N8nWorkflowResponse> {
+    return this.triggerWorkflow('file-delete', {
+      id,
       timestamp: new Date().toISOString(),
     });
   }

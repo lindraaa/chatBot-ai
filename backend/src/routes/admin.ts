@@ -3,11 +3,11 @@ import multer from 'multer';
 import * as adminController from '../controllers/adminController';
 
 const router: Router = Router();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Admin Endpoints
 router.post('/upload-pdf', upload.single('file'), adminController.uploadPdf);
-router.get('/pdf-status', adminController.getPdfStatus);
+router.get('/files', adminController.getUploadedFiles);
 // Stream endpoint MUST come before /stats to match first
 router.get('/stats/stream', adminController.streamStats);
 router.get('/stats', adminController.getStats);

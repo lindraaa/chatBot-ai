@@ -8,6 +8,7 @@ const adminService = new AdminService();
 export const uploadPdf = async (req: Request, res: Response): Promise<void> => {
   try {
     const file = (req as any).file;
+    console.log('Received file upload request:', { fileName: file?.originalname, fileSize: file?.size });
     if (!file) {
       res.status(400).json({ status: 'error', message: 'No file provided' });
       return;
@@ -20,15 +21,17 @@ export const uploadPdf = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Get PDF status endpoint
-export const getPdfStatus = async (req: Request, res: Response): Promise<void> => {
+// Get all uploaded files endpoint
+export const getUploadedFiles = async (req: Request, res: Response): Promise<void> => {
   try {
-    const status = await adminService.getPdfStatus();
-    res.status(200).json({ status: 'success', data: status });
+    const files = await adminService.getUploadedFiles();
+    res.status(200).json({ status: 'success', data: files });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Failed to retrieve PDF status', error: String(error) });
+    res.status(500).json({ status: 'error', message: 'Failed to retrieve files', error: String(error) });
   }
 };
+
+
 
 // Get dashboard statistics endpoint
 export const getStats = async (req: Request, res: Response): Promise<void> => {
