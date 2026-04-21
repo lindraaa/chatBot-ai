@@ -10,7 +10,6 @@ const messageRepository = new MessageRepository();
 export interface Session {
   id: string;
   startedAt: Date;
-  messageCount: number;
 }
 
 export interface ChatMessage {
@@ -41,7 +40,6 @@ export class ChatService {
       return {
         id: sessionId,
         startedAt: new Date(n8nResponse.data.data.startedAt || new Date()),
-        messageCount: n8nResponse.data.data.messageCount || 0,
       };
     }
 

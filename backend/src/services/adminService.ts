@@ -1,15 +1,6 @@
-// Service layer for Admin operations
+import { StatsRepository, StatsFilters, SessionStats } from '../repositories/statsRepository';
 
-export interface AdminStats {
-  totalSessions: number;
-  totalMessages: number;
-  avgMessagesPerSession: number;
-  pdfStatus: {
-    exists: boolean;
-    filename: string | null;
-    uploadedAt: string | null;
-  };
-}
+// Service layer for Admin operations
 
 export interface PdfUploadResponse {
   success: boolean;
@@ -18,6 +9,12 @@ export interface PdfUploadResponse {
 }
 
 export class AdminService {
+  private statsRepository: StatsRepository;
+
+  constructor() {
+    this.statsRepository = new StatsRepository();
+  }
+
   // Upload PDF
   async uploadPdf(file: Express.Multer.File): Promise<PdfUploadResponse> {
     // TODO: Implement PDF upload logic
@@ -38,17 +35,7 @@ export class AdminService {
   }
 
   // Get dashboard statistics
-  async getStats(): Promise<AdminStats> {
-    // TODO: Implement stats retrieval logic
-    return {
-      totalSessions: 0,
-      totalMessages: 0,
-      avgMessagesPerSession: 0,
-      pdfStatus: {
-        exists: false,
-        filename: null,
-        uploadedAt: null,
-      },
-    };
+  async getStats(filters?: StatsFilters): Promise<SessionStats> {
+    return this.statsRepository.getStats(filters);
   }
 }

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AdminService } from '../services/adminService';
+import { StatsFilters } from '../repositories/statsRepository';
 
 const adminService = new AdminService();
 
@@ -32,9 +33,37 @@ export const getPdfStatus = async (req: Request, res: Response): Promise<void> =
 // Get dashboard statistics endpoint
 export const getStats = async (req: Request, res: Response): Promise<void> => {
   try {
-    const stats = await adminService.getStats();
+    const filters: StatsFilters = {};
+
+    // Parse optional query parameters
+    if (req.query.startDate) {
+      const startDate = new Date(req.query.startDate as string);
+      if (!isNaN(startDate.getTime())) {
+        if (!filters.createdAt) {
+          filters.createdAt = {};
+        }
+        filters.createdAt.startDate = startDate;
+      }
+    }
+
+    if (req.query.endDate) {
+      const endDate = new Date(req.query.endDate as string);
+      if (!isNaN(endDate.getTime())) {
+        if (!filters.createdAt) {
+          filters.createdAt = {};
+        }
+        filters.createdAt.endDate = endDate;
+      }
+    }
+
+    if (req.query.topic) {
+      filters.topic = req.query.topic as string;
+    }
+
+    const stats = await adminService.getStats(filters);
     res.status(200).json({ status: 'success', data: stats });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'Failed to retrieve statistics', error: String(error) });
   }
 };
+
