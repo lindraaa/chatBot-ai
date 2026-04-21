@@ -55,11 +55,11 @@ export const AdminDashboard: React.FC = () => {
     type: 'success' | 'error';
     text: string;
   } | null>(null);
-  const [streamConnected, setStreamConnected] = useState(false);
+  const [_streamConnected, setStreamConnected] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [showAlert, setShowAlert] = useState(true);
   const cleanupStreamRef = useRef<(() => void) | null>(null);
-  const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

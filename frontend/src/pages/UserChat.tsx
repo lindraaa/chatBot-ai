@@ -316,7 +316,7 @@ export const UserChat: React.FC = () => {
               },
             }}
           >
-            {messages.map((message, index) => (
+            {messages.map((message, _index) => (
               <Box key={message.id}>
                 <Box
                   sx={{

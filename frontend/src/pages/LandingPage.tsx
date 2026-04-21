@@ -18,15 +18,6 @@ const fadeInUp = keyframes`
   }
 `;
 
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-`;
-
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
