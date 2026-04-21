@@ -7,6 +7,7 @@ export interface MessageRecord {
   role: 'user' | 'ai';
   content: string;
   topic: string;
+  is_unknown: boolean;
   created_at: Date;
 }
 
@@ -16,14 +17,15 @@ export class MessageRepository {
    */
   async storeMessage(message: Omit<MessageRecord, 'id' | 'created_at'>): Promise<MessageRecord> {
     const result = await query(
-      `INSERT INTO messages (session_id, role, content, topic, created_at)
-       VALUES ($1, $2, $3, $4, NOW())
-       RETURNING id, session_id, role, content, topic, created_at`,
+      `INSERT INTO messages (session_id, role, content, topic, is_unknown, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       RETURNING id, session_id, role, content, topic, is_unknown, created_at`,
       [
         message.session_id,
         message.role,
         message.content,
         message.topic,
+        message.is_unknown,
       ]
     );
 
@@ -44,8 +46,20 @@ export class MessageRepository {
    */
   async getMessagesBySession(sessionId: string): Promise<MessageRecord[]> {
     const result = await query(
-      `SELECT id, session_id, role, content, topic, created_at
+      `SELECT id, session_id, role, content, topic, is_unknown, created_at
        FROM messages WHERE session_id = $1 ORDER BY created_at ASC`,
+      [sessionId]
+    );
+    return result.rows;
+  }
+
+  /**
+   * Get unanswered questions (messages where is_unknown is true) for a session
+   */
+  async getUnansweredQuestionsBySession(sessionId: string): Promise<MessageRecord[]> {
+    const result = await query(
+      `SELECT id, session_id, role, content, topic, is_unknown, created_at
+       FROM messages WHERE session_id = $1 AND is_unknown = true ORDER BY created_at ASC`,
       [sessionId]
     );
     return result.rows;

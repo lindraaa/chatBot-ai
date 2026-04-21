@@ -17,13 +17,7 @@ export interface ChatMessage {
   userMessage: string;
   aiResponse: string;
   topic: string;
-}
-
-export interface ContactFormData {
-  name: string;
-  email: string;
-  message: string;
-  sessionId?: string;
+  noAnswerFound?: boolean;
 }
 
 export class ChatService {
@@ -54,6 +48,7 @@ export class ChatService {
       // Increment message count in database
         const topic = n8nResponse.data.data.topic;
       const aiResponse = n8nResponse.data.data.aiResponse;
+      const noAnswerFound = n8nResponse.data.data.noAnswerFound || false;
       const timestamp = new Date();
 
       // Store user message
@@ -62,6 +57,7 @@ export class ChatService {
         role: 'user',
         content: userMessage,
         topic,
+        is_unknown: noAnswerFound,
       });
 
       // Store AI response
@@ -69,7 +65,8 @@ export class ChatService {
         session_id: sessionId,
         role: 'ai',
         content: aiResponse,
-        topic
+        topic,
+        is_unknown: false,
       });
       await sessionRepository.incrementMessageCount(sessionId);
 
@@ -78,32 +75,10 @@ export class ChatService {
         userMessage,
         aiResponse: n8nResponse.data.data.aiResponse,
         topic: n8nResponse.data.data.topic,
+        noAnswerFound,
       };
     }
 
     throw new Error('Failed to process message from n8n');
-  }
-
-  // Submit contact form and send email via n8n
-  async submitContact(formData: ContactFormData): Promise<{ success: boolean; message: string }> {
-    try {
-      // Send to n8n workflow for email processing
-      const n8nResponse = await n8nService.handleContactForm(formData);
-
-      if (!n8nResponse.success) {
-        console.error('n8n contact form processing failed:', n8nResponse.error);
-      }
-
-      return {
-        success: true,
-        message: 'Contact form submitted successfully',
-      };
-    } catch (error) {
-      console.error('Error submitting contact form:', error);
-      return {
-        success: false,
-        message: 'Failed to submit contact form',
-      };
-    }
   }
 }

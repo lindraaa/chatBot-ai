@@ -91,4 +91,20 @@ export class N8nService {
       timestamp: new Date().toISOString(),
     });
   }
+
+  /**
+   * Handle contact form submission via n8n (send email)
+   */
+  async handleContactForm(formData: {
+    name: string;
+    email: string;
+    phone: string;
+    conversationSummary: string;
+    unansweredQuestion: string;
+  }): Promise<N8nWorkflowResponse> {
+    return this.triggerWorkflow('handle-contact-form', {
+      ...formData,
+      timestamp: new Date().toISOString(),
+    });
+  }
 }

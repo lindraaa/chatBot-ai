@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { ChatService } from '../services/chatService';
+import { ContactService } from '../services/contactService';
 
 const chatService = new ChatService();
+const contactService = new ContactService();
 
 // Create new session endpoint
 export const createSession = async (req: Request, res: Response): Promise<void> => {
@@ -24,6 +26,8 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
     }
 
     const chatMessage = await chatService.sendMessage(sessionId, userMessage);
+
+
     res.status(200).json({ status: 'success', data: chatMessage });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'Failed to send message', error: String(error) });
@@ -33,14 +37,20 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
 // Submit contact form endpoint
 export const submitContact = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, message, sessionId } = req.body;
+    const { name, email, phone, sessionId } = req.body;
 
-    if (!name || !email || !message) {
+    if (!name || !email || !sessionId) {
       res.status(400).json({ status: 'error', message: 'Missing required fields' });
       return;
     }
 
-    const result = await chatService.submitContact({ name, email, message, sessionId });
+    const result = await contactService.submitContactForm({
+      name,
+      email,
+      phone,
+      sessionId,
+    });
+
     res.status(200).json({ status: 'success', data: result });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'Failed to submit contact form', error: String(error) });
