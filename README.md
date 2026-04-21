@@ -78,6 +78,20 @@ Open `http://localhost:5173` in your browser
 
 ---
 
+## 🖥️ Admin Dashboard
+
+**What it does:** Upload PDFs, view chat statistics, monitor activity
+
+**Main features:**
+- Upload/manage PDF documents
+- See total chats and message breakdown by topic
+- View recent sessions and activity
+- Real-time analytics updates
+
+**Data flow:** Admin uploads PDF → Backend stores → n8n processes → Pinecone indexes → Dashboard updates
+
+---
+
 ## 💬 How the Chat Works
 
 ```
@@ -597,6 +611,53 @@ GET    /api/admin/stats         → Get statistics
 
 ---
 
+## 🚀 Extending the System
+
+**Add new features by modifying these parts:**
+
+### Quick Patterns
+
+| What to Add | Where to Change | Steps |
+|------------|-----------------|-------|
+| New chat feature | Frontend component + Backend route | 1. Edit React component, 2. Add API endpoint, 3. Test |
+| New n8n workflow | n8n UI | 1. Create workflow, 2. Connect webhook, 3. Call from backend |
+| New database table | Migration + Backend service | 1. Create `.sql` migration, 2. Run `npm run migrate:up`, 3. Add service function |
+| AI behavior change | n8n AI Agent prompt | 1. Edit system prompt in workflow, 2. Test responses |
+| Integration (Slack, etc) | n8n webhook + credentials | 1. Add credentials in n8n, 2. Add webhook node, 3. Configure format |
+
+### File Locations
+
+- **Frontend code:** `frontend/src/components/` and `frontend/src/pages/`
+- **Backend routes:** `backend/src/routes/`
+- **Backend services:** `backend/src/services/`
+- **Database migrations:** `backend/migrations/`
+- **n8n workflows:** Import/export from n8n UI
+
+### Testing Changes
+
+```bash
+# After changing frontend
+npm run dev  # in frontend/ folder
+
+# After changing backend
+npm run dev  # in backend/ folder
+
+# After database changes
+npm run migrate:up
+
+# n8n workflows
+# Test directly in n8n UI at http://localhost:5678
+```
+
+### Common Issues
+
+- **Endpoint returns 404:** Restart backend
+- **Workflow not triggering:** Check webhook URL matches
+- **Migration fails:** Check SQL syntax, run `npm run migrate:down` first
+- **Changes not showing:** Hard refresh browser (Ctrl+Shift+Del)
+
+---
+
 ## 🛠️ Commands You'll Use
 
 ```bash
@@ -626,37 +687,5 @@ npm run migrate:up
 ✅ **Persistent** - Remembers chats  
 ✅ **Professional** - Beautiful design  
 
----
-
-## 📧 Need Help?
-
-1. Check this guide again
-2. Look at DOCUMENTATION.md for detailed info
-3. Check error messages in terminal
-4. Email: idan@tauga.ai
-
----
-
-## ✅ Checklist Before Launch
-
-- [ ] Backend running without errors
-- [ ] Frontend shows at http://localhost:5173
-- [ ] Can chat and get responses
-- [ ] Admin can upload PDF
-- [ ] Statistics show after testing
-- [ ] Contact form works
-
----
-
-## 🎉 Success!
-
-Your chatbot is ready when:
-- Guest can chat and get answers
-- Admin can upload new PDFs
-- Statistics update in real-time
-- Contact form sends emails
-
-
----
 
 **That's it! You now understand the Cincinnati Hotel Chatbot! 🏨**
