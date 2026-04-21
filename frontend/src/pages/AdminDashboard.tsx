@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Container,
@@ -23,12 +23,15 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { chatAPI } from '../api/client';
 
+interface TopicStats {
+  topic: string;
+  count: number;
+}
+
 interface Statistics {
   totalSessions: number;
-  questionsPerCategory: {
-    category: string;
-    count: number;
-  }[];
+  totalQuestions: number;
+  questionsByTopic: TopicStats[];
 }
 
 export const AdminDashboard: React.FC = () => {
@@ -41,20 +44,54 @@ export const AdminDashboard: React.FC = () => {
     type: 'success' | 'error';
     text: string;
   } | null>(null);
+  const [streamConnected, setStreamConnected] = useState(false);
+  const cleanupStreamRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
+    // Fetch initial statistics
     fetchStatistics();
+
+    // Setup real-time stats stream
+    setupStatsStream();
+
+    // Cleanup on unmount
+    return () => {
+      if (cleanupStreamRef.current) {
+        cleanupStreamRef.current();
+      }
+    };
   }, []);
 
   const fetchStatistics = async () => {
     try {
       setLoading(true);
       const response = await chatAPI.getStatistics();
-      setStatistics(response.data);
+      const statsData = response.data.data || response.data;
+      setStatistics(statsData);
     } catch (error) {
       console.error('Failed to fetch statistics:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const setupStatsStream = () => {
+    try {
+      const cleanup = chatAPI.streamStatistics(
+        (stats: Statistics) => {
+          setStatistics(stats);
+          setStreamConnected(true);
+        },
+        (error) => {
+          console.error('Stats stream error:', error);
+          setStreamConnected(false);
+        }
+      );
+
+      cleanupStreamRef.current = cleanup;
+    } catch (error) {
+      console.error('Failed to setup stats stream:', error);
+      setStreamConnected(false);
     }
   };
 
@@ -98,7 +135,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const totalQuestions =
-    statistics?.questionsPerCategory.reduce((sum, item) => sum + item.count, 0) || 0;
+    statistics?.questionsByTopic?.reduce((sum, item) => sum + item.count, 0) || 0;
 
   return (
     <Box
@@ -110,17 +147,31 @@ export const AdminDashboard: React.FC = () => {
     >
       <Container maxWidth="lg">
         {/* Header */}
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-         
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 600,
-              color: '#1a2332',
-            }}
-          >
-            Admin Dashboard
-          </Typography>
+        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/')}
+              sx={{
+                color: '#1a2332',
+                '&:hover': {
+                  backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                },
+              }}
+            >
+              Back
+            </Button>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 600,
+                color: '#1a2332',
+              }}
+            >
+              Admin Dashboard
+            </Typography>
+          </Box>
+  
         </Box>
 
         <Grid container spacing={3}>
@@ -232,7 +283,7 @@ export const AdminDashboard: React.FC = () => {
                     Total Chat Sessions
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'baseline', mt: 1 }}>
-                    {loading ? (
+                    {loading && !statistics ? (
                       <CircularProgress size={32} />
                     ) : (
                       <>
@@ -264,7 +315,7 @@ export const AdminDashboard: React.FC = () => {
                     Total Questions Asked
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'baseline', mt: 1 }}>
-                    {loading ? (
+                    {loading && !statistics ? (
                       <CircularProgress size={32} />
                     ) : (
                       <>
@@ -288,7 +339,7 @@ export const AdminDashboard: React.FC = () => {
             </Grid>
           </Grid>
 
-          {/* Questions by Category Table */}
+          {/* Questions by Topic Table */}
           <Grid item xs={12}>
             <Card sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -300,20 +351,20 @@ export const AdminDashboard: React.FC = () => {
                   }}
                 />
                 <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                  Questions by Category
+                  Questions by Topic
                 </Typography>
               </Box>
 
-              {loading ? (
+              {loading && !statistics ? (
                 <CircularProgress sx={{ display: 'block', mx: 'auto' }} />
-              ) : statistics?.questionsPerCategory &&
-                statistics.questionsPerCategory.length > 0 ? (
+              ) : statistics?.questionsByTopic &&
+                statistics.questionsByTopic.length > 0 ? (
                 <TableContainer component={Paper} sx={{ backgroundColor: '#fafafa' }}>
                   <Table>
                     <TableHead>
                       <TableRow sx={{ backgroundColor: '#f0f0f0' }}>
                         <TableCell sx={{ fontWeight: 600, color: '#1a2332' }}>
-                          Category
+                          Topic
                         </TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600, color: '#1a2332' }}>
                           Number of Questions
@@ -324,15 +375,15 @@ export const AdminDashboard: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {statistics.questionsPerCategory.map((item) => {
+                      {statistics.questionsByTopic.map((item) => {
                         const percentage =
                           totalQuestions > 0
                             ? ((item.count / totalQuestions) * 100).toFixed(1)
                             : '0';
                         return (
-                          <TableRow key={item.category}>
+                          <TableRow key={item.topic}>
                             <TableCell sx={{ color: '#1a2332' }}>
-                              {item.category}
+                              {item.topic}
                             </TableCell>
                             <TableCell align="right" sx={{ color: '#d4af37', fontWeight: 600 }}>
                               {item.count}

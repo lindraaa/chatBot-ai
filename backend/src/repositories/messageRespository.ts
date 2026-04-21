@@ -1,4 +1,5 @@
 import { query } from '../db';
+import statsEventBus from '../events/statsEventBus';
 
 export interface MessageRecord {
   id: string;
@@ -25,7 +26,17 @@ export class MessageRepository {
         message.topic,
       ]
     );
-    return result.rows[0];
+
+    const storedMessage = result.rows[0];
+
+    // Emit event for real-time stats updates
+    statsEventBus.emitMessageStored({
+      sessionId: storedMessage.session_id,
+      role: storedMessage.role,
+      topic: storedMessage.topic,
+    });
+
+    return storedMessage;
   }
 
   /**

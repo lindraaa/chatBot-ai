@@ -1,5 +1,6 @@
 // Data access layer for sessions
 import { query } from '../db';
+import statsEventBus from '../events/statsEventBus';
 
 export interface SessionRecord {
   id: string;
@@ -21,7 +22,12 @@ export class SessionRepository {
       [sessionId]
     );
 
-    return result.rows[0];
+    const createdSession = result.rows[0];
+
+    // Emit event for real-time stats updates
+    statsEventBus.emitSessionCreated({ sessionId: createdSession.id });
+
+    return createdSession;
   }
 
   /**
@@ -44,6 +50,9 @@ export class SessionRepository {
       `UPDATE sessions SET message_count = message_count + 1, updated_at = NOW() WHERE id = $1`,
       [sessionId]
     );
+
+    // Emit event for real-time stats updates
+    statsEventBus.emitSessionUpdated({ sessionId });
   }
 
   /**

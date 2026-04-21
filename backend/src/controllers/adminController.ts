@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AdminService } from '../services/adminService';
-import { StatsFilters } from '../repositories/statsRepository';
+import realtimeStatsService from '../services/realtimeStatsService';
 
 const adminService = new AdminService();
 
@@ -33,37 +33,43 @@ export const getPdfStatus = async (req: Request, res: Response): Promise<void> =
 // Get dashboard statistics endpoint
 export const getStats = async (req: Request, res: Response): Promise<void> => {
   try {
-    const filters: StatsFilters = {};
-
-    // Parse optional query parameters
-    if (req.query.startDate) {
-      const startDate = new Date(req.query.startDate as string);
-      if (!isNaN(startDate.getTime())) {
-        if (!filters.createdAt) {
-          filters.createdAt = {};
-        }
-        filters.createdAt.startDate = startDate;
-      }
-    }
-
-    if (req.query.endDate) {
-      const endDate = new Date(req.query.endDate as string);
-      if (!isNaN(endDate.getTime())) {
-        if (!filters.createdAt) {
-          filters.createdAt = {};
-        }
-        filters.createdAt.endDate = endDate;
-      }
-    }
-
-    if (req.query.topic) {
-      filters.topic = req.query.topic as string;
-    }
-
-    const stats = await adminService.getStats(filters);
+    const stats = await adminService.getStats();
     res.status(200).json({ status: 'success', data: stats });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'Failed to retrieve statistics', error: String(error) });
   }
 };
 
+// Stream real-time statistics via SSE
+export const streamStats = (req: Request, res: Response): void => {
+  try {
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Generate unique client ID
+    const clientId = `sse-client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Register this client with the realtime stats service
+    realtimeStatsService.registerClient(res, clientId);
+
+    // Keep connection alive with periodic comments
+    const heartbeatInterval = setInterval(() => {
+      try {
+        res.write(': heartbeat\n\n');
+      } catch (error) {
+        clearInterval(heartbeatInterval);
+      }
+    }, 30000); // 30 second heartbeat
+
+    // Cleanup on request error or close
+    res.on('error', () => {
+      clearInterval(heartbeatInterval);
+    });
+  } catch (error) {
+    console.error('Error streaming stats:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to stream statistics', error: String(error) });
+  }
+};

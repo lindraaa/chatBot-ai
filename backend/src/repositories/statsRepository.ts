@@ -11,100 +11,38 @@ export interface SessionStats {
   questionsByTopic: TopicStats[];
 }
 
-export interface StatsFilters {
-  createdAt?: {
-    startDate?: Date;
-    endDate?: Date;
-  };
-  topic?: string;
-}
-
 export class StatsRepository {
   /**
-   * Get total number of chat sessions with optional filters
+   * Get total number of chat sessions
    */
-  async getTotalSessions(filters?: StatsFilters): Promise<number> {
-    let sql = `
-      SELECT COUNT(DISTINCT session_id) as total
-      FROM messages
-      WHERE role = 'user'
-    `;
-    const params: unknown[] = [];
-
-    if (filters?.createdAt?.startDate) {
-      sql += ` AND created_at >= $${params.length + 1}`;
-      params.push(filters.createdAt.startDate);
-    }
-
-    if (filters?.createdAt?.endDate) {
-      sql += ` AND created_at <= $${params.length + 1}`;
-      params.push(filters.createdAt.endDate);
-    }
-
-    if (filters?.topic) {
-      sql += ` AND topic = $${params.length + 1}`;
-      params.push(filters.topic);
-    }
-
-    const result = await query(sql, params);
+  async getTotalSessions(): Promise<number> {
+    const result = await query(
+      `SELECT COUNT(DISTINCT session_id) as total
+       FROM messages
+       WHERE role = 'user'`
+    );
     return parseInt(result.rows[0].total, 10);
   }
 
   /**
    * Get total number of questions (user messages)
    */
-  async getTotalQuestions(filters?: StatsFilters): Promise<number> {
-    let sql = `SELECT COUNT(*) as total FROM messages WHERE role = 'user'`;
-    const params: unknown[] = [];
-
-    if (filters?.createdAt?.startDate) {
-      sql += ` AND created_at >= $${params.length + 1}`;
-      params.push(filters.createdAt.startDate);
-    }
-
-    if (filters?.createdAt?.endDate) {
-      sql += ` AND created_at <= $${params.length + 1}`;
-      params.push(filters.createdAt.endDate);
-    }
-
-    if (filters?.topic) {
-      sql += ` AND topic = $${params.length + 1}`;
-      params.push(filters.topic);
-    }
-
-    const result = await query(sql, params);
+  async getTotalQuestions(): Promise<number> {
+    const result = await query(`SELECT COUNT(*) as total FROM messages WHERE role = 'user'`);
     return parseInt(result.rows[0].total, 10);
   }
 
   /**
-   * Get questions grouped by topic with optional filters
+   * Get questions grouped by topic
    */
-  async getQuestionsByTopic(filters?: StatsFilters): Promise<TopicStats[]> {
-    let sql = `
-      SELECT topic, COUNT(*) as count
-      FROM messages
-      WHERE role = 'user'
-    `;
-    const params: unknown[] = [];
-
-    if (filters?.createdAt?.startDate) {
-      sql += ` AND created_at >= $${params.length + 1}`;
-      params.push(filters.createdAt.startDate);
-    }
-
-    if (filters?.createdAt?.endDate) {
-      sql += ` AND created_at <= $${params.length + 1}`;
-      params.push(filters.createdAt.endDate);
-    }
-
-    if (filters?.topic) {
-      sql += ` AND topic = $${params.length + 1}`;
-      params.push(filters.topic);
-    }
-
-    sql += ` GROUP BY topic ORDER BY count DESC`;
-
-    const result = await query(sql, params);
+  async getQuestionsByTopic(): Promise<TopicStats[]> {
+    const result = await query(
+      `SELECT topic, COUNT(*) as count
+       FROM messages
+       WHERE role = 'user'
+       GROUP BY topic
+       ORDER BY count DESC`
+    );
     return result.rows.map((row: any) => ({
       topic: row.topic,
       count: parseInt(row.count, 10),
@@ -112,13 +50,13 @@ export class StatsRepository {
   }
 
   /**
-   * Get comprehensive stats with optional filters
+   * Get comprehensive stats
    */
-  async getStats(filters?: StatsFilters): Promise<SessionStats> {
+  async getStats(): Promise<SessionStats> {
     const [totalSessions, totalQuestions, questionsByTopic] = await Promise.all([
-      this.getTotalSessions(filters),
-      this.getTotalQuestions(filters),
-      this.getQuestionsByTopic(filters),
+      this.getTotalSessions(),
+      this.getTotalQuestions(),
+      this.getQuestionsByTopic(),
     ]);
 
     return {
@@ -128,3 +66,4 @@ export class StatsRepository {
     };
   }
 }
+

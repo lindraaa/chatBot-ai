@@ -1,4 +1,4 @@
-import { StatsRepository, StatsFilters, SessionStats } from '../repositories/statsRepository';
+import { StatsRepository, SessionStats } from '../repositories/statsRepository';
 
 // Service layer for Admin operations
 
@@ -35,7 +35,7 @@ export class AdminService {
   }
 
   // Get dashboard statistics
-  async getStats(filters?: StatsFilters): Promise<SessionStats> {
-    return this.statsRepository.getStats(filters);
+  async getStats(): Promise<SessionStats> {
+    return this.statsRepository.getStats();
   }
 }

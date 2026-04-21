@@ -3,6 +3,7 @@ import { Box, Container, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ChatIcon from '@mui/icons-material/Chat';
 import { keyframes } from '@emotion/react';
+import { Dashboard } from '@mui/icons-material';
 
 const fadeInUp = keyframes`
   from {
@@ -111,6 +112,7 @@ export const LandingPage: React.FC = () => {
           </Typography>
 
           {/* Chat Button */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
           <Button
             variant="contained"
             size="large"
@@ -125,8 +127,21 @@ export const LandingPage: React.FC = () => {
           >
             Start Chatting
           </Button>
-
-         
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<Dashboard sx={{ fontSize: '1.5rem' }} />}
+            onClick={() => navigate('/admin')}
+            sx={{
+              animation: `${fadeInUp} 0.8s ease-out 0.4s both`,
+              fontSize: '1.1rem',
+              px: 6,
+              py: 1.5,
+            }}
+          >
+            Admin Dashboard
+          </Button>
+         </Box>
         </Box>
       </Container>
     </Box>

@@ -50,9 +50,36 @@ export const chatAPI = {
     });
   },
 
-  // Get statistics (admin)
+  // Get statistics (admin) - single request
   getStatistics: () =>
-    apiClient.get('/admin/statistics'),
+    apiClient.get('/admin/stats'),
+
+  // Stream real-time statistics (admin) via SSE
+  streamStatistics: (onData: (stats: any) => void, onError?: (error: any) => void): (() => void) => {
+    const eventSource = new EventSource(`${API_BASE_URL}/api/admin/stats/stream`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const stats = JSON.parse(event.data);
+        onData(stats);
+      } catch (error) {
+        console.error('Error parsing stats data:', error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+      eventSource.close();
+      if (onError) {
+        onError(error);
+      }
+    };
+
+    // Return a cleanup function to close the connection
+    return () => {
+      eventSource.close();
+    };
+  },
 
   // Submit contact form (when chatbot can't answer)
   submitContactForm: (data: {
