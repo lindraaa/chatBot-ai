@@ -11,15 +11,19 @@ export const initializeDatabase = (): Pool => {
     return pool;
   }
 
+  const host = process.env.DB_HOST || 'localhost';
+  const isNeon = host.includes('neon.tech');
+
   pool = new Pool({
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
-    host: process.env.DB_HOST || 'localhost',
+    host: host,
     port: parseInt(process.env.DB_PORT || '5432', 10),
     database: process.env.DB_NAME || 'chatbot_db',
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    ssl: isNeon ? { rejectUnauthorized: false } : false,
   });
 
   pool.on('error', (error: Error): void => {

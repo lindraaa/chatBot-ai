@@ -232,7 +232,7 @@ export const AdminDashboard: React.FC = () => {
       await chatAPI.uploadPDF(selectedFile);
       setUploadMessage({
         type: 'success',
-        text: 'PDF uploaded successfully! The knowledge base has been updated.',
+        text: 'PDF uploaded successfully! ⏳ Please wait 2-3 minutes for the knowledge base to sync and update. The chatbot will use the new information after this time.',
       });
       setShowAlert(true);
       setSelectedFile(null);
