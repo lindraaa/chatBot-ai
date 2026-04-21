@@ -1,9 +1,11 @@
-import React from 'react';
-import { Box, Container, Typography, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Container, Typography, Button, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ChatIcon from '@mui/icons-material/Chat';
 import { keyframes } from '@emotion/react';
 import { Dashboard } from '@mui/icons-material';
+import { chatAPI } from '../api/client';
+import { cookieUtils } from '../utils/cookieUtils';
 
 const fadeInUp = keyframes`
   from {
@@ -27,6 +29,28 @@ const fadeIn = keyframes`
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleStartChat = async () => {
+    try {
+      setLoading(true);
+      const response = await chatAPI.createSession();
+      const sessionId = response.data.sessionId || response.data.data?.id;
+
+      if (sessionId) {
+        // Store session ID in cookie
+        cookieUtils.setSessionCookie(sessionId);
+        // Navigate to chat
+        navigate('/chat');
+      } else {
+        console.error('Failed to get session ID from response');
+      }
+    } catch (error) {
+      console.error('Failed to create session:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box
@@ -116,8 +140,9 @@ export const LandingPage: React.FC = () => {
           <Button
             variant="contained"
             size="large"
-            startIcon={<ChatIcon sx={{ fontSize: '1.5rem' }} />}
-            onClick={() => navigate('/chat')}
+            startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <ChatIcon sx={{ fontSize: '1.5rem' }} />}
+            onClick={handleStartChat}
+            disabled={loading}
             sx={{
               animation: `${fadeInUp} 0.8s ease-out 0.4s both`,
               fontSize: '1.1rem',
@@ -125,7 +150,7 @@ export const LandingPage: React.FC = () => {
               py: 1.5,
             }}
           >
-            Start Chatting
+            {loading ? 'Starting...' : 'Start Chatting'}
           </Button>
           <Button
             variant="contained"

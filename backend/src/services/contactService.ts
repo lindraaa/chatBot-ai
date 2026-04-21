@@ -11,6 +11,8 @@ export interface ContactFormData {
   email: string;
   phone?: string;
   sessionId: string;
+  question?: string;
+  conversationContext?: string;
 }
 
 export class ContactService {
@@ -21,13 +23,13 @@ export class ContactService {
     try {
       // Get conversation history for this session
       const messages = await messageRepository.getMessagesBySession(formData.sessionId);
-      const conversationSummary = messages
+      const conversationSummary = formData.conversationContext || messages
         .map(msg => `${msg.role.toUpperCase()}: ${msg.content}`)
         .join('\n');
 
       // Get unanswered questions from database
       const unansweredQuestions = await messageRepository.getUnansweredQuestionsBySession(formData.sessionId);
-      const unansweredQuestionsSummary = unansweredQuestions
+      const unansweredQuestionsSummary = formData.question || unansweredQuestions
         .filter(msg => msg.role === 'user')
         .map(msg => msg.content)
         .join('\n');

@@ -30,8 +30,18 @@ apiClient.interceptors.response.use(
 
 export const chatAPI = {
   // Send message to chatbot
-  sendMessage: (message: string, sessionId?: string) =>
-    apiClient.post('/chat/message', { message, sessionId }),
+  sendMessage: (message: string, sessionId?: string) => {
+    console.log('sendMessage called with:', { message, sessionId });
+    return apiClient.post('/chat/message', { userMessage: message, sessionId })
+      .then(response => {
+        console.log('sendMessage response:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('sendMessage error:', error);
+        throw error;
+      });
+  },
 
   // Get chat history
   getChatHistory: (sessionId: string) =>
@@ -88,6 +98,15 @@ export const chatAPI = {
     phone: string;
     question: string;
     conversationContext: string;
+    sessionId: string;
   }) =>
-    apiClient.post('/chat/contact-form', data),
+    apiClient.post('/chat/contact', data)
+      .then(response => {
+        console.log('Contact form submitted:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('Contact form error:', error);
+        throw error;
+      }),
 };
