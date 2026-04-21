@@ -20,7 +20,8 @@ export default defineConfig({
       'localhost',
       '127.0.0.1',
       '192.168.100.21',
-      process.env.VITE_HOST || 'your-hostname.com',
+      '.onrender.com',
+      process.env.VITE_HOST || '',
     ].filter(Boolean),
   },
 })
