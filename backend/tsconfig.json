@@ -13,9 +13,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "ignoreDeprecations": "6.0"
+    "moduleResolution": "nodenext",
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
