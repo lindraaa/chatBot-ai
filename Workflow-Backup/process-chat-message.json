@@ -34,7 +34,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"success\": true,\n  \"data\": {\n    \"sessionId\": \"{{ $node['Code in JavaScript'].json.sessionId }}\",\n    \"userMessage\": \"{{ $node['Code in JavaScript'].json.userMessage }}\",\n    \"aiResponse\": \"{{ $json.output }}\",\n    \"topic\":\"{{ $json.topic }}\",\n    \"timestamp\": \"{{ new Date().toISOString() }}\"\n  }\n}",
+        "responseBody": "={\n  \"success\": true,\n  \"data\": {\n    \"sessionId\": \"{{ $node['Code in JavaScript'].json.sessionId }}\",\n    \"userMessage\": \"{{ $node['Code in JavaScript'].json.userMessage }}\",\n    \"aiResponse\": \"{{ $json.output }}\",\n    \"topic\":\"{{ $json.topic }}\",\n    \"noAnswerFound\":{{ $json.noAnswerFound }},\n    \"timestamp\": \"{{ new Date().toISOString() }}\"\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.respondToWebhook",
@@ -49,7 +49,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are a hotel chatbot.\n\nHere is the previous conversation history:\n{{ $memory.chatHistory }}\n\nRead the latest user message:\n{{ $json.userMessage }}\n\nClassify the latest user message into ONE of these topics:\n- Rooms\n- Restaurant\n- Pool\n- Parking\n- Spa\n- Check-in/Check-out\n- Pricing\n- Location\n- Facilities\n- Other\n\nRules:\n- Use the previous conversation history to answer the user's question.\n- Choose only one topic from the list above.\n- Do not explain your reasoning.\n- Do not add extra text.\n- The \"output\" must be a short, helpful chatbot reply to the user message (not the same message).\n- Reply ONLY in this JSON format:\n\n{\n  \"output\": \"short helpful chatbot reply here\",\n  \"topic\": \"Rooms\"\n}\n\nWhere:\n- \"output\" is a natural assistant response to the user.\n- \"topic\" is the correct category only.",
+        "text": "=You are a hotel chatbot.\n\nConversation history:\n{{ $memory.chatHistory }}\n\nUser message:\n{{ $json.userMessage }}\n\nClassify the message into ONE topic:\n- Rooms\n- Restaurant\n- Pool\n- Parking\n- Spa\n- Check-in/Check-out\n- Pricing\n- Location\n- Facilities\n- Other\n\nRules:\n- Answer using conversation history if available\n- If you CANNOT find an answer or don't have information → set noAnswerFound to true\n- If you CAN answer the question → set noAnswerFound to false\n- Reply ONLY in this JSON format:\n\n{\n  \"output\": \"helpful chatbot reply or 'I don't have that information'\",\n  \"topic\": \"selected topic\",\n  \"noAnswerFound\": false\n}",
         "options": {
           "systemMessage": "=Here’s the best system message for your hotel chatbot AI Agent node in n8n, tailored for your use case:\nuse the hotel-chatbot-data tool for getting data\nSystem Message:\n\nYou are a helpful hotel assistant.\nUse the hotel’s knowledge base to answer questions accurately and concisely.\nAlways provide friendly, relevant, and clear responses to guest inquiries."
         }
@@ -90,7 +90,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const raw = $input.first().json.output;\n\n// Parse the stringified JSON\nconst parsed = JSON.parse(raw);\n\nreturn [{\n  json: {\n    output: parsed.output,\n    topic: parsed.topic\n  }\n}];"
+        "jsCode": "const raw = $input.first().json.output;\n\n// Parse the stringified JSON\nconst parsed = JSON.parse(raw);\n\nreturn [{\n  json: {\n    output: parsed.output,\n    topic: parsed.topic,\n    noAnswerFound: parsed.noAnswerFound\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -317,7 +317,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "13bef7a3-98c5-4067-bc3b-05145d4a8019",
+  "versionId": "63cbd10a-8638-49c7-82fc-b05f375fe857",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "40cede097e1ee1c5bd7404473f04ace12cf071b5edb9d616b901eaaa71f46069"

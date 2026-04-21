@@ -60,6 +60,10 @@ export const chatAPI = {
     });
   },
 
+  // Get uploaded files (admin)
+  getUploadedFiles: () =>
+    apiClient.get('/admin/files'),
+
   // Get statistics (admin) - single request
   getStatistics: () =>
     apiClient.get('/admin/stats'),

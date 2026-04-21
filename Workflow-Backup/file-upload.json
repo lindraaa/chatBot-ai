@@ -6,12 +6,14 @@
         "httpMethod": "POST",
         "path": "upload-file",
         "responseMode": "lastNode",
-        "options": {}
+        "options": {
+          "binaryPropertyName": "file"
+        }
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        0,
+        -160,
         0
       ],
       "id": "56bdc2e1-738f-466c-a7d4-d11a3c5e1fde",
@@ -41,7 +43,7 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        240,
+        256,
         0
       ],
       "id": "86fae580-6698-41b6-aa1c-f13426fe2374",
@@ -52,11 +54,70 @@
           "name": "Google Drive account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Decode base64 from webhook body\nconst input =  $input.first();\nconst fileData =$input.first().json.body\n\nif (!fileData?.file) {\n  throw new Error('No file found in body');\n}\n\nconst buffer = Buffer.from(fileData.file, 'base64');\n\nreturn {\n  json: {},\n  binary: {\n    file: {\n      data: buffer,\n      fileName: fileData.fileName || 'file.pdf',\n      mimeType: fileData.mimeType || 'application/pdf'\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        0
+      ],
+      "id": "6420c10b-a139-4162-91fb-c3692763abda",
+      "name": "Code in JavaScript"
     }
   ],
-  "pinData": {},
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.lindraserver.online",
+            "user-agent": "node",
+            "content-length": "3083",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "*",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "120.29.108.95",
+            "cf-ipcountry": "PH",
+            "cf-ray": "9efb424bdc4b8170-HKG",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-warp-tag-id": "dd7fb76d-969a-4f4b-95b0-af3a04e5f5a4",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "sec-fetch-mode": "cors",
+            "x-forwarded-for": "120.29.108.95",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "fileName": "simple_hotel_data.pdf",
+            "file": "JVBERi0xLjQKJZOMi54gUmVwb3J0TGFiIEdlbmVyYXRlZCBQREYgZG9jdW1lbnQgKG9wZW5zb3VyY2UpCjEgMCBvYmoKPDwKL0YxIDIgMCBSIC9GMiAzIDAgUgo+PgplbmRvYmoKMiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYSAvRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZyAvTmFtZSAvRjEgL1N1YnR5cGUgL1R5cGUxIC9UeXBlIC9Gb250Cj4+CmVuZG9iagozIDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQgL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcgL05hbWUgL0YyIC9TdWJ0eXBlIC9UeXBlMSAvVHlwZSAvRm9udAo+PgplbmRvYmoKNCAwIG9iago8PAovQ29udGVudHMgOCAwIFIgL01lZGlhQm94IFsgMCAwIDU5NS4yNzU2IDg0MS44ODk4IF0gL1BhcmVudCA3IDAgUiAvUmVzb3VyY2VzIDw8Ci9Gb250IDEgMCBSIC9Qcm9jU2V0IFsgL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSSBdCj4+IC9Sb3RhdGUgMCAvVHJhbnMgPDwKCj4+IAogIC9UeXBlIC9QYWdlCj4+CmVuZG9iago1IDAgb2JqCjw8Ci9QYWdlTW9kZSAvVXNlTm9uZSAvUGFnZXMgNyAwIFIgL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0F1dGhvciAoXChhbm9ueW1vdXNcKSkgL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDQyMDE2NDMzNSswMCcwMCcpIC9DcmVhdG9yIChcKHVuc3BlY2lmaWVkXCkpIC9LZXl3b3JkcyAoKSAvTW9kRGF0ZSAoRDoyMDI2MDQyMDE2NDMzNSswMCcwMCcpIC9Qcm9kdWNlciAoUmVwb3J0TGFiIFBERiBMaWJyYXJ5IC0gXChvcGVuc291cmNlXCkpIAogIC9TdWJqZWN0IChcKHVuc3BlY2lmaWVkXCkpIC9UaXRsZSAoXChhbm9ueW1vdXNcKSkgL1RyYXBwZWQgL0ZhbHNlCj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Db3VudCAxIC9LaWRzIFsgNCAwIFIgXSAvVHlwZSAvUGFnZXMKPj4KZW5kb2JqCjggMCBvYmoKPDwKL0ZpbHRlciBbIC9BU0NJSTg1RGVjb2RlIC9GbGF0ZURlY29kZSBdIC9MZW5ndGggODQ0Cj4+CnN0cmVhbQpHYXQ9KWdOKGFzJjpNbCtsc2o3VWQpRDEwXVRuZFpRayYuN1QmSE0hLCNPOFUwPlZmW3JIbSxJPl9qJzdHUzJPPUJEN3FQQkkqaXMrJyptOyc3ZmZoXVVMWmEqMjVyMipxOkFhS2IpU3BrRDZOOj9cQGYlVTMzK2AhWmVYa2pBLiJaQVVRVEo5SkAxZFZRM1tkPSxGOixOJSdiU0JFO2EpPV9WQ0BQV2ldKUBTMnVgMFNZdWVRRWMtWjtqcWNgU2Z0W3FuUSQ/PVxcaSZhJWk7cE4+byxSVFByRFVHQzBGXEU5NVc0LTBvO0k6Q20+ZEVLW0FkbGk8ZnQjWUxCc1ZPVT9bUkJsQz4naDI7U0VWR0IrWSJeSlYvb2R0alM/MG1rTVFlTEZBWjFecz1ePDRtUGJmXj0qOyQkZVUkO1o5RUZgPEdmUVVAPEZUKT1YRGltZ1lDWGxNW2gnIkdCSEVIKl1OQTduTEg3Wmc2QWMnIXBaLzVRYXVoYWo7SVNCbGE6NildQWlaSzJpQzAxSTNgUilhajhHR0I+ajsoLHRNInNzWkotLTJhWlVlcjJIMCgiRFklQyJFOk1ATFRmREpuRmwvQSk5MmNNLUBlYCJyMlRebS8mazNVVlYiPUFFa1ZvdVNrOkBJcV0lZ2JOKy9JSyttI080PnRrZFxJODcwOyw9UzVTK1l1RkVnUDAqUmAyaEFqJFZqUmhvNDIkal5LKmhTIl9HR1dhPj03WXJkS01dLXFaajQvJ3A8LFJVMG5xYycycEo1ZzZuLkUybitHdGVmZzpNQ2U/cmBLOyJ0I0NSWz1OVkQ8O0siKS47ckxEZTtGY0gyKz0vLW9BJmJpcWlDTzRWJlBNbClcSD5xMFdXSD9ENUNIK1xqbEFsSTBsXlkyV01BKSRhaG5RXGhpQV9wMUBQZ0IkSUNIV1I8YCs1IS9AOGVYPVMvMCVaUHJbQ1FaWlFgXVRBbiYlaUFfOEF0OztcLTJgYzdEX2FaTmxNck1MXzpFRE5BNHA+NzRmb2UvXWImSyZbUlMmXjRRZFAuOixqX0NSY25tPE1tKjlRRycwZF1ASlFRM1M8Kjt0Jzx0RmFhOmdXanA5VGcjN0ovKy9UL0RgO34+ZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgOQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwNjEgMDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBuIAowMDAwMDAwMjA5IDAwMDAwIG4gCjAwMDAwMDAzMjEgMDAwMDAgbiAKMDAwMDAwMDUyNCAwMDAwMCBuIAowMDAwMDAwNTkyIDAwMDAwIG4gCjAwMDAwMDA4NzIgMDAwMDAgbiAKMDAwMDAwMDkzMSAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9JRCAKWzwyNDIyYTEyODBhOTJiYWM4NjY5MTBkZmZkMjAzMDYyOD48MjQyMmExMjgwYTkyYmFjODY2OTEwZGZmZDIwMzA2Mjg+XQolIFJlcG9ydExhYiBnZW5lcmF0ZWQgUERGIGRvY3VtZW50IC0tIGRpZ2VzdCAob3BlbnNvdXJjZSkKCi9JbmZvIDYgMCBSCi9Sb290IDUgMCBSCi9TaXplIDkKPj4Kc3RhcnR4cmVmCjE4NjUKJSVFT0YK",
+            "mimeType": "application/pdf"
+          },
+          "webhookUrl": "https://n8n.lindraserver.online/webhook/upload-file",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
   "connections": {
     "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
       "main": [
         [
           {
@@ -72,7 +133,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "e6b5baea-8a21-4682-b206-57b7766df1ec",
+  "versionId": "89568729-f110-4109-b92a-e13944a93d2f",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "40cede097e1ee1c5bd7404473f04ace12cf071b5edb9d616b901eaaa71f46069"

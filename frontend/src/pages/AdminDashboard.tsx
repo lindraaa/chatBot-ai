@@ -16,10 +16,12 @@ import {
   CircularProgress,
   Alert,
   LinearProgress,
+  Slide,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useNavigate } from 'react-router-dom';
 import { chatAPI } from '../api/client';
 
@@ -34,6 +36,15 @@ interface Statistics {
   questionsByTopic: TopicStats[];
 }
 
+interface UploadedFile {
+  id: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  n8n_file_id: string;
+  uploaded_at: string;
+}
+
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -45,11 +56,16 @@ export const AdminDashboard: React.FC = () => {
     text: string;
   } | null>(null);
   const [streamConnected, setStreamConnected] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
+  const [showAlert, setShowAlert] = useState(true);
   const cleanupStreamRef = useRef<(() => void) | null>(null);
+  const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Fetch initial statistics
+    // Fetch initial statistics and uploaded files
     fetchStatistics();
+    fetchUploadedFiles();
 
     // Setup real-time stats stream
     setupStatsStream();
@@ -75,6 +91,21 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchUploadedFiles = async () => {
+    try {
+      const response = await chatAPI.getUploadedFiles();
+      console.log('Uploaded files response:', response);
+      const files = response.data.data || response.data;
+      console.log('Parsed files:', files);
+      if (Array.isArray(files) && files.length > 0) {
+        console.log('Setting uploaded file:', files[0]);
+        setUploadedFile(files[0]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch uploaded files:', error);
+    }
+  };
+
   const setupStatsStream = () => {
     try {
       const cleanup = chatAPI.streamStatistics(
@@ -95,17 +126,100 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Auto-hide alert after 5 seconds
+  useEffect(() => {
+    if (uploadMessage && showAlert) {
+      alertTimeoutRef.current = setTimeout(() => {
+        setShowAlert(false);
+      }, 5000);
+
+      return () => {
+        if (alertTimeoutRef.current) {
+          clearTimeout(alertTimeoutRef.current);
+        }
+      };
+    }
+  }, [uploadMessage, showAlert]);
+
+  const handleCloseAlert = () => {
+    setShowAlert(false);
+  };
+
+  const handleClearFile = () => {
+    setSelectedFile(null);
+    setUploadMessage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const validateFile = (file: File): { valid: boolean; error?: string } => {
+    // Check MIME type
+    if (file.type !== 'application/pdf') {
+      return {
+        valid: false,
+        error: `Invalid file type: ${file.type}. Only PDF files are allowed.`,
+      };
+    }
+
+    // Check file extension
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      return {
+        valid: false,
+        error: 'Invalid file extension. Only .pdf files are allowed.',
+      };
+    }
+
+    // Check file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return {
+        valid: false,
+        error: `File size exceeds 50MB limit. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`,
+      };
+    }
+
+    return { valid: true };
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files[0]) {
-      if (files[0].type === 'application/pdf') {
+      const validation = validateFile(files[0]);
+      if (validation.valid) {
         setSelectedFile(files[0]);
         setUploadMessage(null);
       } else {
         setUploadMessage({
           type: 'error',
-          text: 'Please select a PDF file.',
+          text: validation.error || 'Invalid file. Please select a PDF file.',
         });
+        setSelectedFile(null);
+      }
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const files = event.dataTransfer.files;
+    if (files && files[0]) {
+      const validation = validateFile(files[0]);
+      if (validation.valid) {
+        setSelectedFile(files[0]);
+        setUploadMessage(null);
+      } else {
+        setUploadMessage({
+          type: 'error',
+          text: validation.error || 'Invalid file. Please select a PDF file.',
+        });
+        setSelectedFile(null);
       }
     }
   };
@@ -120,15 +234,18 @@ export const AdminDashboard: React.FC = () => {
         type: 'success',
         text: 'PDF uploaded successfully! The knowledge base has been updated.',
       });
+      setShowAlert(true);
       setSelectedFile(null);
-      // Refresh statistics
+      // Refresh statistics and uploaded files
       await fetchStatistics();
+      await fetchUploadedFiles();
     } catch (error) {
       console.error('Upload failed:', error);
       setUploadMessage({
         type: 'error',
         text: 'Failed to upload PDF. Please try again.',
       });
+      setShowAlert(true);
     } finally {
       setUploading(false);
     }
@@ -145,6 +262,36 @@ export const AdminDashboard: React.FC = () => {
         py: 4,
       }}
     >
+      {/* Top Alert with Smooth Animation */}
+      <Slide direction="down" in={uploadMessage !== null && showAlert} mountOnEnter unmountOnExit>
+        <Alert
+          onClose={handleCloseAlert}
+          severity={uploadMessage?.type || 'info'}
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1300,
+            borderRadius: 0,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            animation: uploadMessage ? 'slideDown 0.3s ease-out' : 'none',
+            '@keyframes slideDown': {
+              from: {
+                transform: 'translateY(-100%)',
+                opacity: 0,
+              },
+              to: {
+                transform: 'translateY(0)',
+                opacity: 1,
+              },
+            },
+          }}
+        >
+          {uploadMessage?.text}
+        </Alert>
+      </Slide>
+
       <Container maxWidth="lg">
         {/* Header */}
         <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between' }}>
@@ -215,7 +362,10 @@ export const AdminDashboard: React.FC = () => {
                   '&:hover': {
                     backgroundColor: '#f0f0f0',
                   },
+                  cursor: 'pointer',
                 }}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
               >
                 <input
                   type="file"
@@ -223,13 +373,33 @@ export const AdminDashboard: React.FC = () => {
                   onChange={handleFileSelect}
                   style={{ display: 'none' }}
                   id="pdf-input"
+                  ref={fileInputRef}
                 />
                 <label htmlFor="pdf-input" style={{ cursor: 'pointer' }}>
                   <Typography variant="body2" sx={{ color: '#5a6c7d' }}>
                     {selectedFile ? (
-                      <>
-                        <strong>Selected:</strong> {selectedFile.name}
-                      </>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <strong>Selected:</strong> {selectedFile.name}
+                        </Box>
+                        <Button
+                          size="small"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleClearFile();
+                          }}
+                          sx={{
+                            minWidth: 'auto',
+                            p: '4px 8px',
+                            color: '#d4af37',
+                            '&:hover': {
+                              backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                            },
+                          }}
+                        >
+                          <ClearIcon sx={{ fontSize: '1.2rem' }} />
+                        </Button>
+                      </Box>
                     ) : (
                       <>
                         Click to select PDF or drag and drop
@@ -239,19 +409,13 @@ export const AdminDashboard: React.FC = () => {
                 </label>
               </Box>
 
-              {uploadMessage && (
-                <Alert severity={uploadMessage.type} sx={{ mb: 2 }}>
-                  {uploadMessage.text}
-                </Alert>
-              )}
-
               <Button
                 variant="contained"
                 fullWidth
                 onClick={handleUpload}
                 disabled={!selectedFile || uploading}
                 sx={{
-                  mb: 2,
+                  mb: 3,
                 }}
               >
                 {uploading ? (
@@ -263,6 +427,31 @@ export const AdminDashboard: React.FC = () => {
                   'Upload PDF'
                 )}
               </Button>
+
+              {uploadedFile && (
+                <Box sx={{ mb: 3, pb: 3, borderBottom: '1px solid #e0e0e0' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#5a6c7d', mb: 1.5 }}>
+                    📄 Current File:
+                  </Typography>
+                  <Box
+                    sx={{
+                      backgroundColor: '#f0f0f0',
+                      p: 2,
+                      borderRadius: '6px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 0.5,
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: '#1a2332', fontWeight: 500 }}>
+                      {uploadedFile.file_name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#9a9a9a' }}>
+                      Uploaded: {new Date(uploadedFile.uploaded_at).toLocaleDateString()} at {new Date(uploadedFile.uploaded_at).toLocaleTimeString()}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
 
               <Typography variant="caption" sx={{ color: '#9a9a9a' }}>
                 Supported format: PDF only. Max file size: 50MB
