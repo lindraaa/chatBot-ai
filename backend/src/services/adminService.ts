@@ -39,6 +39,10 @@ export class AdminService {
       await this.fileRepository.deleteFile(existingFile.id);
     }
 
+    // Delete Pinecone namespace before uploading new file
+    const namespace = 'hotel-chat-bot';
+    await this.n8nService.deletePineconeNamespace(namespace, true);
+
     // Create file record in database
     const fileRecord = await this.fileRepository.createFile({
       file_name: file.originalname,

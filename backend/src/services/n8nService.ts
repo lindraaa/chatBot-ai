@@ -173,4 +173,17 @@ export class N8nService {
       timestamp: new Date().toISOString(),
     });
   }
+
+  /**
+   * Delete Pinecone namespace via n8n
+   * @param namespace - Pinecone namespace to delete
+   * @param deleteAll - Whether to delete all vectors in the namespace
+   */
+  async deletePineconeNamespace(namespace: string, deleteAll: boolean = true): Promise<N8nWorkflowResponse> {
+    return this.triggerWorkflow('delete-pinecone', {
+      namespace,
+      deleteAll,
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
