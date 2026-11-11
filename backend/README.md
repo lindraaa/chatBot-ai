@@ -25,6 +25,11 @@ cp .env.example .env
 Available variables:
 - `PORT` - Server port (default: 3000)
 - `NODE_ENV` - Environment mode (development/production)
+- `SUPABASE_URL` - Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY` - Server-only Supabase service role key
+- `SUPABASE_STORAGE_BUCKET` - Storage bucket for uploaded PDFs
+- `GEMINI_API_KEY` - Gemini API key used to create embeddings
+- `GEMINI_EMBEDDING_MODEL` - Gemini embedding model (default: `gemini-embedding-001`)
 
 ## Development
 
@@ -35,6 +40,27 @@ npm run dev
 ```
 
 The server will run on `http://localhost:3000`
+
+## PDF vector upload
+
+The `POST /api/admin/upload-pdf` endpoint accepts a multipart `file` field. It
+uploads the PDF to Supabase Storage, extracts its text, creates Gemini
+embeddings, and stores the chunks in Supabase Postgres with `pgvector`.
+
+Before using the endpoint:
+
+1. Create a Supabase Storage bucket matching `SUPABASE_STORAGE_BUCKET`.
+2. Configure the Supabase and Gemini variables in `.env`.
+3. Run the database migrations with `npm run migrate:up`.
+
+The database migration creates the `documents` and `document_chunks` tables and
+the `match_document_chunks` similarity-search function. The chat endpoint does
+not use these vectors yet; this is the upload and indexing phase.
+
+Uploading a new PDF is replacement-based: the new PDF is fully uploaded and
+indexed first. Once it is ready, previous documents, their Storage objects, and
+their cascaded vector chunks are deleted. If indexing fails, the previous
+document remains available.
 
 ## Build
 
