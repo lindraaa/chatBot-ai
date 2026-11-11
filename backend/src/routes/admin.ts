@@ -3,7 +3,7 @@ import multer from 'multer';
 import * as adminController from '../controllers/adminController';
 
 const router: Router = Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
 // Admin Endpoints
 router.post('/upload-pdf', upload.single('file'), adminController.uploadPdf);
@@ -13,5 +13,4 @@ router.get('/stats/stream', adminController.streamStats);
 router.get('/stats', adminController.getStats);
 
 export default router;
-
 
